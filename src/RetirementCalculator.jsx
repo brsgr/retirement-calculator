@@ -250,6 +250,7 @@ export default function RetirementCalculator() {
                           }
                           className="w-full bg-terminal-bgLight border border-terminal-border text-terminal-amber text-xs px-2 py-1 focus:outline-none focus:border-terminal-amber placeholder:text-terminal-text/30"
                         />
+                        <div className="h-[1.375rem]"></div>
                       </div>
                       <div>
                         <label className="text-xs text-terminal-text/60 block mb-1">
@@ -268,11 +269,11 @@ export default function RetirementCalculator() {
                           className="w-full bg-terminal-bgLight border border-terminal-border text-terminal-amber text-xs px-2 py-1 focus:outline-none focus:border-terminal-amber placeholder:text-terminal-text/30"
                         />
                         {getEffectiveValue(year, "savingsRate") > 100 ? (
-                          <p className="text-xs text-terminal-amber mt-1">
+                          <p className="text-xs text-terminal-amber mt-1 h-5">
                             ⚠ rate &gt; 100%
                           </p>
                         ) : (
-                          <p className="text-xs text-terminal-text/50 mt-1">
+                          <p className="text-xs text-terminal-text/50 mt-1 h-5">
                             → $
                             {(
                               (getEffectiveValue(year, "income") *
