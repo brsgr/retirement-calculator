@@ -1,7 +1,7 @@
-import RetirementCalculator from './RetirementCalculator'
+import FinancialPlanner from "./FinancialPlanner";
 
 function App() {
-  return <RetirementCalculator />
+  return <FinancialPlanner />;
 }
 
-export default App
+export default App;

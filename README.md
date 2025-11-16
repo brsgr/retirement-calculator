@@ -1,6 +1,6 @@
-# retirement-calculator
+# simple-financial-planner
 
-A minimalist terminal-style retirement projection calculator built with Vite + React.
+A minimalist terminal-style financial planning tool built with Vite + React.
 
 ## Running Locally
 
@@ -17,7 +17,7 @@ npm run build
 
 ## How It Works
 
-The calculator projects your retirement balance using compound interest:
+The planner projects your financial balance using compound interest:
 
 1. Each year: apply return rate to existing balance
 2. Add your annual contribution (income × savings rate)

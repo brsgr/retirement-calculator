@@ -1,7 +1,7 @@
 import { useState } from "react";
 import config from "./config.json";
 
-export default function RetirementCalculator() {
+export default function FinancialPlanner() {
   const [annualIncome, setAnnualIncome] = useState(
     config.defaults.annualIncome,
   );
@@ -133,10 +133,10 @@ export default function RetirementCalculator() {
     <div className="min-h-screen bg-terminal-bg text-terminal-text font-mono p-8">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-2xl text-terminal-amber mb-1">
-          RETIREMENT_CALC.EXE
+          $ financial-planner
         </h1>
         <p className="text-sm text-terminal-text/60 mb-8">
-          &gt; financial projection model v1.0
+          simple financial projection tool v1.0
         </p>
 
         <div className="bg-terminal-bgLight border border-terminal-border p-6 mb-8">
