@@ -92,9 +92,117 @@ export default function WealthChart({
                       <p style={{ color: "#d4af37", margin: 0 }}>
                         Year {data.year}
                       </p>
-                      <p style={{ color: "#00ff00", margin: "4px 0" }}>
-                        Balance: ${data.balance.toLocaleString()}
+                      <p
+                        style={{
+                          color: "#00ff00",
+                          margin: "4px 0",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        Total Net Worth: ${data.balance.toLocaleString()}
                       </p>
+
+                      {/* Show balance breakdown */}
+                      {data.liquidBalance !== undefined && (
+                        <div
+                          style={{
+                            marginTop: "8px",
+                            paddingLeft: "8px",
+                            borderLeft: "2px solid #404040",
+                          }}
+                        >
+                          <p
+                            style={{
+                              color: "#a0a0a0",
+                              margin: "2px 0",
+                              fontSize: "10px",
+                            }}
+                          >
+                            • Liquid: ${data.liquidBalance.toLocaleString()}
+                          </p>
+                          {data.totalEquity > 0 && (
+                            <p
+                              style={{
+                                color: "#a0a0a0",
+                                margin: "2px 0",
+                                fontSize: "10px",
+                              }}
+                            >
+                              • Total Home Equity: $
+                              {data.totalEquity.toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Show mortgage equity details */}
+                      {data.mortgageEquities &&
+                        Object.keys(data.mortgageEquities).length > 0 && (
+                          <div
+                            style={{
+                              marginTop: "8px",
+                              paddingTop: "8px",
+                              borderTop: "1px solid #404040",
+                            }}
+                          >
+                            <p
+                              style={{ color: "#d4af37", margin: "0 0 4px 0" }}
+                            >
+                              Home Equity Details:
+                            </p>
+                            {Object.entries(data.mortgageEquities).map(
+                              ([id, mortgage]) => (
+                                <div
+                                  key={id}
+                                  style={{
+                                    marginBottom: "6px",
+                                    paddingLeft: "8px",
+                                  }}
+                                >
+                                  <p
+                                    style={{
+                                      color: "#a0a0a0",
+                                      margin: "2px 0",
+                                      fontSize: "10px",
+                                    }}
+                                  >
+                                    {mortgage.description}:
+                                  </p>
+                                  <p
+                                    style={{
+                                      color: "#00cc00",
+                                      margin: "2px 0 2px 12px",
+                                      fontSize: "9px",
+                                    }}
+                                  >
+                                    Equity: ${mortgage.equity.toLocaleString()}
+                                  </p>
+                                  <p
+                                    style={{
+                                      color: "#888",
+                                      margin: "2px 0 2px 12px",
+                                      fontSize: "9px",
+                                    }}
+                                  >
+                                    Value: $
+                                    {mortgage.homeValue.toLocaleString()}
+                                  </p>
+                                  <p
+                                    style={{
+                                      color: "#888",
+                                      margin: "2px 0 2px 12px",
+                                      fontSize: "9px",
+                                    }}
+                                  >
+                                    Owed: $
+                                    {mortgage.remainingPrincipal.toLocaleString()}
+                                  </p>
+                                </div>
+                              ),
+                            )}
+                          </div>
+                        )}
+
                       {data.events && data.events.length > 0 && (
                         <div
                           style={{

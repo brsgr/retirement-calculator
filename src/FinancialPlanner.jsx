@@ -58,9 +58,14 @@ export default function FinancialPlanner() {
     let currentIncome = annualIncome;
     let currentSavingsRate = savingsRate;
 
+    // Track mortgage equity separately for each mortgage
+    const mortgageEquities = {};
+
     for (let year = 0; year < years; year++) {
-      // Apply growth from previous year
-      balance = balance * (1 + returnRate / 100);
+      // Apply growth from previous year (only if balance is positive)
+      if (balance > 0) {
+        balance = balance * (1 + returnRate / 100);
+      }
 
       // Check for adjustments for this year (year+1 since we're 0-indexed)
       if (advancedMode && yearlyAdjustments[year + 1]) {
@@ -81,11 +86,17 @@ export default function FinancialPlanner() {
       if (advancedMode) {
         bigPurchases.forEach((purchase) => {
           if (purchase.type === "mortgage") {
-            // Down payment in the first year
+            // Initialize mortgage equity tracking on first year
             if (purchase.year === year + 1) {
+              mortgageEquities[purchase.id] = {
+                homeValue: purchase.houseCost || 0,
+                remainingPrincipal:
+                  (purchase.houseCost || 0) - (purchase.downPayment || 0),
+              };
               balance -= purchase.downPayment || 0;
             }
-            // Annual mortgage payments
+
+            // Track mortgage through its lifetime
             if (
               year + 1 >= purchase.year &&
               year + 1 < purchase.year + (purchase.mortgageTerm || 30)
@@ -94,13 +105,42 @@ export default function FinancialPlanner() {
                 (purchase.houseCost || 0) - (purchase.downPayment || 0);
               const monthlyRate = (purchase.interestRate || 0) / 100 / 12;
               const numPayments = (purchase.mortgageTerm || 30) * 12;
+
               if (monthlyRate > 0) {
                 const monthlyPayment =
                   (principal *
                     (monthlyRate * Math.pow(1 + monthlyRate, numPayments))) /
                   (Math.pow(1 + monthlyRate, numPayments) - 1);
                 balance -= monthlyPayment * 12;
+
+                // Calculate principal paid this year
+                const yearsIntoPurchase = year + 1 - purchase.year;
+                const monthsIntoPurchase = yearsIntoPurchase * 12;
+
+                // Calculate remaining principal at start of year
+                const remainingAtStart =
+                  principal *
+                  ((Math.pow(1 + monthlyRate, numPayments) -
+                    Math.pow(1 + monthlyRate, monthsIntoPurchase)) /
+                    (Math.pow(1 + monthlyRate, numPayments) - 1));
+
+                // Calculate remaining principal at end of year
+                const remainingAtEnd =
+                  principal *
+                  ((Math.pow(1 + monthlyRate, numPayments) -
+                    Math.pow(1 + monthlyRate, monthsIntoPurchase + 12)) /
+                    (Math.pow(1 + monthlyRate, numPayments) - 1));
+
+                mortgageEquities[purchase.id].remainingPrincipal = Math.max(
+                  0,
+                  remainingAtEnd,
+                );
               }
+            }
+
+            // Apply appreciation to home value (using same return rate)
+            if (mortgageEquities[purchase.id]) {
+              mortgageEquities[purchase.id].homeValue *= 1 + returnRate / 100;
             }
           } else if (purchase.year === year + 1) {
             // Regular one-time purchase
@@ -110,7 +150,15 @@ export default function FinancialPlanner() {
       }
     }
 
-    return Math.round(balance);
+    // Calculate total equity across all mortgages
+    const totalEquity = Object.values(mortgageEquities).reduce(
+      (sum, mortgage) => {
+        return sum + (mortgage.homeValue - mortgage.remainingPrincipal);
+      },
+      0,
+    );
+
+    return Math.round(balance + totalEquity);
   };
 
   // Calculate year-by-year progression with event metadata
@@ -120,10 +168,16 @@ export default function FinancialPlanner() {
     let currentIncome = annualIncome;
     let currentSavingsRate = savingsRate;
 
+    // Track mortgage equity separately for each mortgage
+    const mortgageEquities = {};
+
     // Add year 0
     data.push({
       year: 0,
       balance: Math.round(balance),
+      liquidBalance: Math.round(balance),
+      totalEquity: 0,
+      mortgageEquities: {},
       events: [],
     });
 
@@ -131,8 +185,10 @@ export default function FinancialPlanner() {
       const events = [];
       const yearNum = year + 1;
 
-      // Apply growth from previous year
-      balance = balance * (1 + returnRate / 100);
+      // Apply growth from previous year (only if balance is positive)
+      if (balance > 0) {
+        balance = balance * (1 + returnRate / 100);
+      }
 
       // Check for adjustments for this year
       if (advancedMode && yearlyAdjustments[yearNum]) {
@@ -161,8 +217,14 @@ export default function FinancialPlanner() {
       if (advancedMode) {
         bigPurchases.forEach((purchase) => {
           if (purchase.type === "mortgage") {
-            // Down payment in the first year
+            // Initialize mortgage equity tracking on first year
             if (purchase.year === yearNum) {
+              mortgageEquities[purchase.id] = {
+                description: purchase.description || "Mortgage",
+                homeValue: purchase.houseCost || 0,
+                remainingPrincipal:
+                  (purchase.houseCost || 0) - (purchase.downPayment || 0),
+              };
               const downPayment = purchase.downPayment || 0;
               balance -= downPayment;
               events.push({
@@ -170,7 +232,8 @@ export default function FinancialPlanner() {
                 label: `${purchase.description || "Mortgage"} Down Payment: -$${downPayment.toLocaleString()}`,
               });
             }
-            // Annual mortgage payments
+
+            // Track mortgage through its lifetime
             if (
               yearNum >= purchase.year &&
               yearNum < purchase.year + (purchase.mortgageTerm || 30)
@@ -179,6 +242,7 @@ export default function FinancialPlanner() {
                 (purchase.houseCost || 0) - (purchase.downPayment || 0);
               const monthlyRate = (purchase.interestRate || 0) / 100 / 12;
               const numPayments = (purchase.mortgageTerm || 30) * 12;
+
               if (monthlyRate > 0) {
                 const monthlyPayment =
                   (principal *
@@ -190,7 +254,27 @@ export default function FinancialPlanner() {
                   type: "mortgage_payment",
                   label: `${purchase.description || "Mortgage"} Payment: -$${annualPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}/yr`,
                 });
+
+                // Calculate remaining principal at end of year
+                const yearsIntoPurchase = yearNum - purchase.year;
+                const monthsIntoPurchase = yearsIntoPurchase * 12;
+
+                const remainingAtEnd =
+                  principal *
+                  ((Math.pow(1 + monthlyRate, numPayments) -
+                    Math.pow(1 + monthlyRate, monthsIntoPurchase + 12)) /
+                    (Math.pow(1 + monthlyRate, numPayments) - 1));
+
+                mortgageEquities[purchase.id].remainingPrincipal = Math.max(
+                  0,
+                  remainingAtEnd,
+                );
               }
+            }
+
+            // Apply appreciation to home value (using same return rate)
+            if (mortgageEquities[purchase.id]) {
+              mortgageEquities[purchase.id].homeValue *= 1 + returnRate / 100;
             }
           } else if (purchase.year === yearNum) {
             // Regular one-time purchase
@@ -204,9 +288,31 @@ export default function FinancialPlanner() {
         });
       }
 
+      // Calculate total equity across all mortgages
+      const totalEquity = Object.values(mortgageEquities).reduce(
+        (sum, mortgage) => {
+          return sum + (mortgage.homeValue - mortgage.remainingPrincipal);
+        },
+        0,
+      );
+
+      // Create mortgage equity details for display
+      const mortgageEquityDetails = {};
+      Object.entries(mortgageEquities).forEach(([id, mortgage]) => {
+        mortgageEquityDetails[id] = {
+          description: mortgage.description,
+          homeValue: Math.round(mortgage.homeValue),
+          remainingPrincipal: Math.round(mortgage.remainingPrincipal),
+          equity: Math.round(mortgage.homeValue - mortgage.remainingPrincipal),
+        };
+      });
+
       data.push({
         year: yearNum,
-        balance: Math.round(balance),
+        balance: Math.round(balance + totalEquity),
+        liquidBalance: Math.round(balance),
+        totalEquity: Math.round(totalEquity),
+        mortgageEquities: mortgageEquityDetails,
         events,
       });
     }
