@@ -11,6 +11,7 @@ export default function RetirementCalculator() {
   const [savingsRate, setSavingsRate] = useState(config.defaults.savingsRate);
   const [advancedMode, setAdvancedMode] = useState(false);
   const [yearlyAdjustments, setYearlyAdjustments] = useState({});
+  const [bigPurchases, setBigPurchases] = useState([]);
 
   // Define the ranges for the table
   const yearOptions = config.projections.yearOptions;
@@ -39,6 +40,16 @@ export default function RetirementCalculator() {
       // Add contribution for this year using current values
       const annualContribution = currentIncome * (currentSavingsRate / 100);
       balance += annualContribution;
+
+      // Subtract big purchases for this year
+      if (advancedMode) {
+        const purchasesThisYear = bigPurchases.filter(
+          (p) => p.year === year + 1,
+        );
+        purchasesThisYear.forEach((purchase) => {
+          balance -= purchase.amount;
+        });
+      }
     }
 
     return Math.round(balance);
@@ -96,6 +107,26 @@ export default function RetirementCalculator() {
 
     // Fall back to base value
     return field === "income" ? annualIncome : savingsRate;
+  };
+
+  const addBigPurchase = () => {
+    const newPurchase = {
+      id: Date.now(),
+      year: 5,
+      amount: 50000,
+      description: "",
+    };
+    setBigPurchases([...bigPurchases, newPurchase]);
+  };
+
+  const removeBigPurchase = (id) => {
+    setBigPurchases(bigPurchases.filter((p) => p.id !== id));
+  };
+
+  const updateBigPurchase = (id, field, value) => {
+    setBigPurchases(
+      bigPurchases.map((p) => (p.id === id ? { ...p, [field]: value } : p)),
+    );
   };
 
   return (
@@ -255,6 +286,113 @@ export default function RetirementCalculator() {
                     </div>
                   ))}
               </div>
+            </div>
+          )}
+
+          {/* Advanced Mode - Big Purchases */}
+          {advancedMode && (
+            <div className="mb-8 border border-terminal-border p-4 bg-terminal-bg">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs text-terminal-amber">[BIG_PURCHASES]</h3>
+                <button
+                  onClick={addBigPurchase}
+                  className="text-xs text-terminal-green hover:text-terminal-greenDim border border-terminal-green px-2 py-1 transition-colors"
+                >
+                  [+ ADD]
+                </button>
+              </div>
+              <p className="text-xs text-terminal-text/50 mb-4">
+                One-time expenses that reduce your balance (house, college,
+                etc.)
+              </p>
+              {bigPurchases.length === 0 ? (
+                <p className="text-xs text-terminal-text/30 italic">
+                  No purchases configured. Click [+ ADD] to add one.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {bigPurchases.map((purchase) => (
+                    <div
+                      key={purchase.id}
+                      className="grid grid-cols-4 gap-3 items-center border border-terminal-border/50 p-3"
+                    >
+                      <div>
+                        <label className="text-xs text-terminal-text/60 block mb-1">
+                          Year
+                        </label>
+                        <select
+                          value={purchase.year}
+                          onChange={(e) =>
+                            updateBigPurchase(
+                              purchase.id,
+                              "year",
+                              Number(e.target.value),
+                            )
+                          }
+                          className="w-full bg-terminal-bgLight border border-terminal-border text-terminal-amber text-xs px-2 py-1 focus:outline-none focus:border-terminal-amber"
+                        >
+                          {yearOptions
+                            .filter((y) => y > 0)
+                            .map((year) => (
+                              <option key={year} value={year}>
+                                {year}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-xs text-terminal-text/60 block mb-1">
+                          Amount ($)
+                        </label>
+                        <input
+                          type="text"
+                          value={purchase.amount || ""}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (
+                              val === "" ||
+                              (!isNaN(parseFloat(val)) && parseFloat(val) >= 0)
+                            ) {
+                              updateBigPurchase(
+                                purchase.id,
+                                "amount",
+                                val === "" ? 0 : parseFloat(val),
+                              );
+                            }
+                          }}
+                          className="w-full bg-terminal-bgLight border border-terminal-border text-terminal-amber text-xs px-2 py-1 focus:outline-none focus:border-terminal-amber"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-terminal-text/60 block mb-1">
+                          Description
+                        </label>
+                        <input
+                          type="text"
+                          value={purchase.description}
+                          onChange={(e) =>
+                            updateBigPurchase(
+                              purchase.id,
+                              "description",
+                              e.target.value,
+                            )
+                          }
+                          placeholder="e.g., house, car"
+                          className="w-full bg-terminal-bgLight border border-terminal-border text-terminal-amber text-xs px-2 py-1 focus:outline-none focus:border-terminal-amber placeholder:text-terminal-text/30"
+                        />
+                      </div>
+                      <div className="flex items-end">
+                        <button
+                          onClick={() => removeBigPurchase(purchase.id)}
+                          className="text-xs text-terminal-text/50 hover:text-terminal-amber border border-terminal-border px-2 py-1 transition-colors"
+                        >
+                          [X]
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
