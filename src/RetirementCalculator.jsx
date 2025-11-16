@@ -452,7 +452,11 @@ export default function RetirementCalculator() {
         </div>
 
         <div className="text-xs text-terminal-text/40 border-t border-terminal-border pt-4">
-          <p>// simplified projection model</p>
+          <p>// simplified projection model - educational purposes only</p>
+          <p>
+            // all calculations run locally in your browser - no data is saved
+            or stored
+          </p>
           <p>
             //{" "}
             <a
