@@ -198,15 +198,8 @@ export default function AdvancedModeControls({
                         value={purchase.houseCost || ""}
                         onChange={(e) => {
                           const val = e.target.value;
-                          if (
-                            val === "" ||
-                            (!isNaN(parseFloat(val)) && parseFloat(val) >= 0)
-                          ) {
-                            onUpdateBigPurchase(
-                              purchase.id,
-                              "houseCost",
-                              val === "" ? 0 : parseFloat(val),
-                            );
+                          if (val === "" || val.match(/^\d*\.?\d*$/)) {
+                            onUpdateBigPurchase(purchase.id, "houseCost", val);
                           }
                         }}
                         placeholder="500000"
@@ -222,14 +215,11 @@ export default function AdvancedModeControls({
                         value={purchase.downPayment || ""}
                         onChange={(e) => {
                           const val = e.target.value;
-                          if (
-                            val === "" ||
-                            (!isNaN(parseFloat(val)) && parseFloat(val) >= 0)
-                          ) {
+                          if (val === "" || val.match(/^\d*\.?\d*$/)) {
                             onUpdateBigPurchase(
                               purchase.id,
                               "downPayment",
-                              val === "" ? 0 : parseFloat(val),
+                              val,
                             );
                           }
                         }}
@@ -241,25 +231,60 @@ export default function AdvancedModeControls({
                       <label className="text-xs text-terminal-text/60 block mb-1">
                         Interest Rate (%)
                       </label>
-                      <input
-                        type="text"
-                        value={purchase.interestRate ?? ""}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (
-                            val === "" ||
-                            (!isNaN(parseFloat(val)) && parseFloat(val) >= 0)
-                          ) {
-                            onUpdateBigPurchase(
-                              purchase.id,
-                              "interestRate",
-                              val === "" ? 0 : parseFloat(val),
-                            );
-                          }
-                        }}
-                        placeholder="6.5"
-                        className="w-full bg-terminal-bg border border-terminal-border text-terminal-amber text-xs px-2 py-1 focus:outline-none focus:border-terminal-amber placeholder:text-terminal-text/30"
-                      />
+                      <div className="flex gap-1">
+                        <input
+                          type="text"
+                          value={purchase.interestRate ?? ""}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            // Allow empty string, numbers, and partial decimals like "6."
+                            if (val === "" || val.match(/^\d*\.?\d*$/)) {
+                              onUpdateBigPurchase(
+                                purchase.id,
+                                "interestRate",
+                                val,
+                              );
+                            }
+                          }}
+                          placeholder="6.5"
+                          className="flex-1 bg-terminal-bg border border-terminal-border text-terminal-amber text-xs px-2 py-1 focus:outline-none focus:border-terminal-amber placeholder:text-terminal-text/30"
+                        />
+                        <div className="flex flex-col">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const current =
+                                parseFloat(purchase.interestRate) || 0;
+                              onUpdateBigPurchase(
+                                purchase.id,
+                                "interestRate",
+                                (current + 0.1).toFixed(1),
+                              );
+                            }}
+                            className="text-xs text-terminal-text/60 hover:text-terminal-amber border border-terminal-border px-1 leading-none transition-colors"
+                            title="Increase by 0.1%"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const current =
+                                parseFloat(purchase.interestRate) || 0;
+                              const newValue = Math.max(0, current - 0.1);
+                              onUpdateBigPurchase(
+                                purchase.id,
+                                "interestRate",
+                                newValue.toFixed(1),
+                              );
+                            }}
+                            className="text-xs text-terminal-text/60 hover:text-terminal-amber border border-terminal-border px-1 leading-none transition-colors"
+                            title="Decrease by 0.1%"
+                          >
+                            ▼
+                          </button>
+                        </div>
+                      </div>
                     </div>
                     <div>
                       <label className="text-xs text-terminal-text/60 block mb-1">
@@ -366,15 +391,8 @@ export default function AdvancedModeControls({
                       value={purchase.amount || ""}
                       onChange={(e) => {
                         const val = e.target.value;
-                        if (
-                          val === "" ||
-                          (!isNaN(parseFloat(val)) && parseFloat(val) >= 0)
-                        ) {
-                          onUpdateBigPurchase(
-                            purchase.id,
-                            "amount",
-                            val === "" ? 0 : parseFloat(val),
-                          );
+                        if (val === "" || val.match(/^\d*\.?\d*$/)) {
+                          onUpdateBigPurchase(purchase.id, "amount", val);
                         }
                       }}
                       className="w-full bg-terminal-bgLight border border-terminal-border text-terminal-amber text-xs px-2 py-1 focus:outline-none focus:border-terminal-amber"
