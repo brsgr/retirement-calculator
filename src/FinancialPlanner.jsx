@@ -325,7 +325,7 @@ export default function FinancialPlanner() {
           <p>
             //{" "}
             <a
-              href="https://github.com/brsg/readme"
+              href="https://github.com/brsgr/financial-planner"
               target="_blank"
               rel="noopener noreferrer"
               className="text-terminal-amber hover:text-terminal-amberDim underline"
